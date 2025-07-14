@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Myth or Fact AR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #container {
+      width: 100vw;
+      max-width: calc(100vh * 9 / 16);
+      aspect-ratio: 9 / 16;
+      position: relative;
+      background: black;
+      overflow: hidden;
+    }
+
+    video, canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+      #catalogueBtn {
+  position: absolute;
+  top: calc(2% + 100px);
+  right: 4%;
+  z-index: 20;
+  background: rgba(89, 89, 170, 0.25); /* Matching gesture label */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(89, 89, 170, 0.35);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  font-family: 'LEMONMILK', sans-serif;
+  text-align: center;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(89, 89, 170, 0.4);
+}
+
+
+
+    #catalogueScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000000ee;
+      z-index: 30;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #cataloguePDF {
+      width: 90%;
+      height: 90%;
+      border: none;
+      background: white;
+    }
+
+    #backToQuizBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+
+    #mainLabels {
+      position: absolute;
+      left: 50%;
+      top: 58%;
+      transform: translate(-50%, 0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 96%;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #mainLabel1, #mainLabel2 {
+      background: rgba(89, 89, 170, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(89, 89, 170, 0.35);
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'LEMONMILK', sans-serif;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(89, 89, 170, 0.4);
+      margin-bottom: 1.2vw;
+      padding: 12px 10px;
+      width: 100%;
+      text-shadow: 0 2px 12px #222;
+    }
+    #mainLabel1 {
+      font-size: 6vw;
+      font-weight: bold;
+      margin-bottom: 2.5vw;
+    }
+    #mainLabel2 {
+      font-size: 5vw;
+      font-weight: normal;
+      margin-bottom: 0;
+    }
+    #bottomLabel {
+      position: absolute;
+      left: 50%;
+      bottom: 3%;
+      transform: translateX(-50%);
+      font-size: 3vw;
+      color: #fff;
+      font-family: 'LEMONMILK', sans-serif;
+      text-align: center;
+      z-index: 10;
+      text-shadow: 0 2px 12px #222;
+      pointer-events: none;
+      background: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      width: auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #countdown {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12vw;
+      font-weight: bold;
+      font-family: 'LEMONMILK', sans-serif;
+      color: white;
+      text-shadow: 0 0 10px #0f0;
+      display: none;
+      z-index: 20;
+    }
+
+    #confettiVideo {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    @font-face {
+      font-family: 'LEMONMILK';
+      src: url('LEMONMILK-Bold.otf') format('truetype');
+      font-weight: bold;
+    }
+
+    .labelBox {
+      background: rgba(89, 89, 170, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(89, 89, 170, 0.35);
+      border-radius: 14px;
+      color: #fff;
+      font-family: 'LEMONMILK', sans-serif;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(89, 89, 170, 0.4);
+      margin-bottom: 1.2vw;
+      padding: 14px 12px;
+      width: 100%;
+      text-shadow: 0 2px 12px #222;
+      word-break: break-word;
+      pointer-events: none;
+    }
+    #questionLabel {
+      position: absolute;
+      top: 3.5%;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      width: 90%;
+      min-width: unset;
+      max-width: unset;
+      font-size: 4.8vw;
+      font-weight: bold;
+      z-index: 30;
+      opacity: 0;
+      display: none;
+      padding: 18px 0 18px 0;
+      border-radius: 18px;
+      transition: opacity 0.4s;
+    }
+
+    video#screensaverVideo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 100;
+      background: black;
+      display: none;
+      pointer-events: none;
+    }
+
+    /* Dynamically adaptive text for all labels and buttons */
+    .labelBox,
+    #mainLabel1,
+    #mainLabel2,
+    #bottomLabel,
+    #questionLabel,
+    #countdown,
+    #catalogueBtn,
+    #backToQuizBtn {
+      font-size: clamp(14px, 3vw, 32px);
+      line-height: 1.18;
+      padding: clamp(8px, 2vw, 24px) clamp(8px, 2vw, 24px);
+      border-radius: clamp(8px, 2vw, 18px);
+      word-break: break-word;
+      transition: font-size 0.2s, padding 0.2s, border-radius 0.2s;
+    }
+    #mainLabel1 {
+      font-size: clamp(20px, 6vw, 48px);
+      font-weight: bold;
+      margin-bottom: 2.5vw;
+    }
+    #mainLabel2 {
+      font-size: clamp(16px, 4vw, 32px);
+      font-weight: normal;
+      margin-bottom: 0;
+    }
+    #bottomLabel {
+      font-size: clamp(14px, 3vw, 28px);
+      padding: clamp(4px, 1vw, 12px) clamp(8px, 2vw, 24px);
+      border-radius: clamp(6px, 1vw, 12px);
+    }
+    #questionLabel {
+      font-size: clamp(16px, 4.8vw, 36px);
+      padding: clamp(8px, 2vw, 18px) 0;
+      border-radius: clamp(8px, 2vw, 18px);
+    }
+    #countdown {
+      font-size: clamp(32px, 12vw, 96px);
+      padding: clamp(8px, 2vw, 18px) clamp(8px, 2vw, 18px);
+      border-radius: clamp(8px, 2vw, 18px);
+    }
+    #catalogueBtn {
+      font-size: clamp(14px, 2vw, 24px);
+      padding: 0;
+      width: clamp(80px, 16vw, 160px);
+      height: clamp(80px, 16vw, 160px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      word-break: break-word;
+      border-radius: 50% !important;
+      aspect-ratio: 1 / 1;
+      min-width: 80px;
+      min-height: 80px;
+      max-width: 160px;
+      max-height: 160px;
+    }
+    #backToQuizBtn {
+      font-size: clamp(14px, 2vw, 24px);
+      padding: clamp(8px, 1.5vw, 16px) clamp(12px, 2vw, 24px);
+      border-radius: clamp(6px, 1vw, 12px);
+    }
+
+    #catalogueScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000000ee;
+      z-index: 30;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #cataloguePDF {
+      width: 90%;
+      height: 90%;
+      border: none;
+      background: white;
+    }
+
+    #backToQuizBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="container">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <video id="confettiVideo" src="./assets/videos/confetti.webm" muted playsinline></video>
+    <div id="mainLabels">
+      <div id="mainLabel1" class="labelBox">Let's see how well you know about your wellness!</div>
+      <div id="mainLabel2" class="labelBox">Answer 3 simple questions and get a Free Sample from ARTH.</div>
+    </div>
+    <div id="questionLabel" class="labelBox" style="display:none"></div>
+    <div id="bottomLabel">Raise your hand to start the quiz.</div>
+    <div id="countdown">3</div>
+    <button id="catalogueBtn"><span id="catalogueBtnText" style="display:inline-block;max-width:90%;white-space:nowrap;overflow:hidden;text-align:center;width:100%;">CATALOGUE</span></button>
+    <video id="screensaverVideo" src="./assets/videos/screensaver.webm" loop muted style="display:none;"></video>
+  </div>
+
+   <div id="catalogueScreen">
+    <button id="backToQuizBtn">← Back to Quiz</button>
+    <iframe id="cataloguePDF" src="catalogue.pdf"></iframe>
+  </div>
+
+  <script type="module">
+    // F11 to toggle fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        const elem = document.documentElement;
+        if (!document.fullscreenElement) {
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+      }
+    });
+    // Dynamically shrink CATALOGUE button text to fit in one line inside the circle
+    function fitCatalogueBtnText() {
+      const btn = document.getElementById('catalogueBtn');
+      const span = document.getElementById('catalogueBtnText');
+      if (!btn || !span) return;
+      // Reset font size to max
+      span.style.fontSize = '';
+      let minFont = 10;
+      let maxFont = parseFloat(getComputedStyle(btn).fontSize) || 24;
+      let btnPadding = 0;
+      // Try to get padding if set
+      try {
+        btnPadding = parseFloat(getComputedStyle(btn).paddingLeft) + parseFloat(getComputedStyle(btn).paddingRight);
+      } catch {}
+      // Binary search for best font size
+      let best = minFont;
+      for (let i = 0; i < 10; i++) {
+        let mid = (minFont + maxFont) / 2;
+        span.style.fontSize = mid + 'px';
+        // Use scrollWidth to check if it fits
+        if (span.scrollWidth <= btn.clientWidth - btnPadding && span.offsetHeight <= btn.clientHeight) {
+          best = mid;
+          minFont = mid;
+        } else {
+          maxFont = mid;
+        }
+      }
+      span.style.fontSize = best + 'px';
+    }
+    window.addEventListener('resize', fitCatalogueBtnText);
+    setTimeout(fitCatalogueBtnText, 100);
+    document.addEventListener('DOMContentLoaded', fitCatalogueBtnText);
+    window.fitCatalogueBtnText = fitCatalogueBtnText;
+
+    import {
+      FilesetResolver,
+      FaceLandmarker,
+      GestureRecognizer
+    } from "./libs/models/vision-bundle.mjs";
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const mainLabels = document.getElementById("mainLabels");
+    const mainLabel1 = document.getElementById("mainLabel1");
+    const mainLabel2 = document.getElementById("mainLabel2");
+    const bottomLabel = document.getElementById("bottomLabel");
+    const questionLabel = document.getElementById("questionLabel");
+    const countdownEl = document.getElementById("countdown");
+    const confettiVideo = document.getElementById("confettiVideo");
+    const catalogueBtn = document.getElementById("catalogueBtn");
+    const catalogueScreen = document.getElementById("catalogueScreen");
+    const backToQuizBtn = document.getElementById("backToQuizBtn");
+    const screensaverVideo = document.getElementById("screensaverVideo");
+
+    let questions = [], selectedQuestions = [], currentQuestionIndex = 0;
+let question = null, state = "idle";
+    let correctCount = 0, answerLocked = false, faceLastDetected = Date.now();
+    let countdownValue = 3, countdownInterval = null;
+    let productAlpha = 0, productFadeState = "in", productDisplayTimer = 0;
+    let productImg = new Image();
+
+    const correctImage = new Image();
+    correctImage.src = "./assets/images/correct.png";
+    const wrongImage = new Image();
+    wrongImage.src = "./assets/images/wrong.png";
+    const finalSuccess = new Image();
+    finalSuccess.src = "./assets/images/final-success.png";
+    const finalFail = new Image();
+    finalFail.src = "./assets/images/final-fail.png";
+    const congratsBadge = new Image();
+    congratsBadge.src = "./assets/images/congrats-badge.png";
+
+    let showResultImage = null;
+    let resultImageTimer = 0;
+    let resultImageAlpha = 1;
+
+    const bubbleVideo = document.createElement("video");
+    bubbleVideo.src = "./assets/videos/bubble.webm";
+    bubbleVideo.loop = true;
+    bubbleVideo.muted = true;
+    bubbleVideo.playsInline = true;
+    bubbleVideo.autoplay = true;
+    bubbleVideo.style.display = "none";
+    document.body.appendChild(bubbleVideo);
+    bubbleVideo.play();
+
+    catalogueBtn.onclick = () => {
+      if (state === "idle" || state === "result") {
+        window.location.href = 'catalogue.html';
+      }
+    };
+
+    backToQuizBtn.onclick = () => {
+      catalogueScreen.style.display = "none";
+      document.getElementById("container").style.display = "flex";
+      state = "idle";
+      // Show intro labels
+      mainLabels.style.display = "flex";
+      bottomLabel.style.display = "block";
+    };
+
+    async function loadQuestions() {
+      try {
+        const response = await fetch("questions.json");
+        questions = await response.json();
+        if (!questions.length) throw new Error("No questions found.");
+      } catch (e) {
+        // Optionally show error elsewhere
+        console.error(e);
+      }
+    }
+
+    async function getExternalCameraDeviceId() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      return videoDevices[videoDevices.length - 1].deviceId;
+    }
+
+    async function initCamera() {
+      const deviceId = await getExternalCameraDeviceId();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: { exact: deviceId },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+      video.srcObject = stream;
+      await new Promise(resolve => video.onloadedmetadata = () => (video.play(), resizeCanvas(), resolve()));
+    }
+
+    function resizeCanvas() {
+      canvas.width = video.offsetWidth;
+      canvas.height = video.offsetHeight;
+    }
+
+    function drawCroppedVideo() {
+      const sw = video.videoWidth, sh = video.videoHeight;
+      const targetAspect = 9 / 16, cropW = sh * targetAspect, cropX = (sw - cropW) / 2;
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, cropX, 0, cropW, sh, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+
+    function startQuiz() {
+      selectedQuestions = questions.sort(() => 0.5 - Math.random()).slice(0, 3);
+      currentQuestionIndex = 0;
+      correctCount = 0;
+      question = selectedQuestions[0];
+      productImg.src = question.productImage;
+      answerLocked = false;
+      // Hide intro labels
+      mainLabels.style.display = "none";
+      bottomLabel.style.display = "none";
+      // Show question label
+      questionLabel.textContent = question.statement;
+      questionLabel.style.display = "block";
+      setTimeout(() => { questionLabel.style.opacity = 1; }, 10);
+      state = "inQuestion";
+    }
+
+    function nextQuestion() {
+      showResultImage = null;
+      resultImageTimer = 0;
+      resultImageAlpha = 1;
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= selectedQuestions.length) {
+        state = "result";
+        resultImageTimer = 180;
+        questionLabel.style.display = "none";
+        return;
+      }
+      question = selectedQuestions[currentQuestionIndex];
+      productImg.src = question.productImage;
+      answerLocked = false;
+      questionLabel.textContent = question.statement;
+      questionLabel.style.display = "block";
+      setTimeout(() => { questionLabel.style.opacity = 1; }, 10);
+    }
+
+    // Use local paths for all assets, models, and wasm files
+    const vision = await FilesetResolver.forVisionTasks("./assets/wasm");
+    const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "./assets/models/face_landmarker.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO"
+    });
+
+    const gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "./assets/models/gesture_recognizer.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO"
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', fitCatalogueBtnText);
+
+    let screensaverTimeout = null;
+    let screensaverActive = false;
+    function showScreensaver() {
+      screensaverVideo.style.display = "block";
+      screensaverVideo.currentTime = 0;
+      screensaverVideo.play();
+      screensaverActive = true;
+    }
+    function hideScreensaver() {
+      screensaverVideo.pause();
+      screensaverVideo.style.display = "none";
+      screensaverActive = false;
+    }
+    function resetScreensaverTimer() {
+      if (screensaverTimeout) clearTimeout(screensaverTimeout);
+      if (screensaverActive) hideScreensaver();
+      screensaverTimeout = setTimeout(showScreensaver, 20000); // 20s
+    }
+
+    async function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (state === "idle" || state === "result") {
+        catalogueBtn.style.display = "flex";
+      } else {
+  catalogueBtn.style.display = "none";
+      }
+      if (state === "showingProduct") {
+        questionLabel.textContent = question.truth;
+        questionLabel.style.display = "block";
+        setTimeout(() => { questionLabel.style.opacity = 1; }, 10);
+
+        if (productFadeState === "in") {
+          productAlpha += 0.15;
+          if (productAlpha >= 1) {
+            productAlpha = 1;
+            productFadeState = "hold";
+            productDisplayTimer = 30;
+          }
+        } else if (productFadeState === "hold") {
+          if (--productDisplayTimer <= 0) productFadeState = "out";
+        } else if (productFadeState === "out") {
+          productAlpha -= 0.15;
+          if (productAlpha <= 0) {
+            productAlpha = 0;
+            state = "inQuestion";
+            nextQuestion();
+          }
+        }
+
+        ctx.save();
+        ctx.filter = 'blur(10px)';
+        drawCroppedVideo();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = productAlpha;
+        ctx.font = `bold ${Math.min(canvas.width * 0.06, 28)}px sans-serif`;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        const words = question.productLine.split(" "), maxW = canvas.width * 0.9;
+        let line = "", y = canvas.height / 2 - canvas.height * 0.25;
+        for (let w of words) {
+          const testLine = line + w + " ";
+          if (ctx.measureText(testLine).width > maxW) {
+            ctx.fillText(line.trim(), canvas.width / 2, y);
+            line = w + " ";
+            y += 30;
+          } else line = testLine;
+        }
+        ctx.fillText(line.trim(), canvas.width / 2, y);
+
+        const scale = 0.5;
+        const iw = canvas.width * scale;
+        const ih = canvas.height * scale;
+        const ix = (canvas.width - iw) / 2;
+        const iy = y + 30;
+        ctx.drawImage(productImg, ix, iy, iw, ih);
+        ctx.restore();
+      } else if (state === "result") {
+        questionLabel.style.opacity = 0;
+        setTimeout(() => { questionLabel.style.display = "none"; questionLabel.textContent = ''; }, 400);
+        drawCroppedVideo();
+        const resultImg = correctCount === selectedQuestions.length ? finalSuccess : finalFail;
+        const imgW = canvas.width * 0.7;
+        const imgH = imgW * (resultImg.height / resultImg.width || 1);
+        const imgX = (canvas.width - imgW) / 2;
+        const imgY = canvas.height - imgH - canvas.height * 0.04; // 4% space from bottom
+        ctx.drawImage(resultImg, imgX, imgY, imgW, imgH);
+
+        if (correctCount === selectedQuestions.length) {
+          const badgeWidth = canvas.width * 0.7;
+          const badgeHeight = canvas.width * 0.3
+          ctx.drawImage(congratsBadge, (canvas.width - badgeWidth) / 2, 40, badgeWidth, badgeHeight);
+
+          if (confettiVideo.paused) {
+            confettiVideo.style.display = "block";
+            confettiVideo.currentTime = 0;
+            confettiVideo.play();
+            confettiVideo.onended = () => {
+              confettiVideo.style.display = "none";
+            };
+          }
+        } else {
+          confettiVideo.style.display = "none";
+          confettiVideo.pause();
+        }
+
+        if (--resultImageTimer <= 0) {
+          state = "idle";
+          // displayLabel removed
+          // removed label update
+        }
+      } else if (state === "inQuestion") {
+        questionLabel.textContent = question.statement;
+        questionLabel.style.display = "block";
+        setTimeout(() => { questionLabel.style.opacity = 1; }, 10);
+        drawCroppedVideo();
+      } else {
+        questionLabel.style.opacity = 0;
+        setTimeout(() => { questionLabel.style.display = "none"; questionLabel.textContent = ''; }, 400);
+        drawCroppedVideo();
+      }
+
+      if (showResultImage && resultImageTimer > 0) {
+        const iw = canvas.width * 0.7;
+        const ih = iw * (showResultImage.height / showResultImage.width || 1);
+        const ix = (canvas.width - iw) / 2;
+        const iy = canvas.height - ih - canvas.height * 0.04; // 4% space from bottom
+        ctx.save();
+        ctx.globalAlpha = resultImageAlpha;
+        ctx.drawImage(showResultImage, ix, iy, iw, ih);
+        ctx.restore();
+        resultImageTimer--;
+        if (resultImageTimer < 30) resultImageAlpha = resultImageTimer / 30;
+      }
+
+      // Show/hide intro labels depending on state
+      if (state === "idle") {
+        mainLabels.style.display = "flex";
+        bottomLabel.style.display = "block";
+        questionLabel.style.opacity = 0;
+        setTimeout(() => { questionLabel.style.display = "none"; questionLabel.textContent = ''; }, 400);
+      } else {
+        mainLabels.style.display = "none";
+        bottomLabel.style.display = "none";
+      }
+
+      const now = performance.now();
+      try {
+        const face = await faceLandmarker.detectForVideo(video, now);
+        const gest = await gestureRecognizer.recognizeForVideo(video, now);
+        const gesture = gest.gestures[0]?.[0]?.categoryName || "None";
+
+        if (face.faceLandmarks.length > 0) {
+          resetScreensaverTimer();
+        }
+
+        if (face.faceLandmarks.length > 0 || gesture !== "None") {
+          resetScreensaverTimer();
+        }
+
+        if (face.faceLandmarks.length > 0) {
+          faceLastDetected = Date.now();
+
+          if (gesture === "Open_Palm" && ["idle", "result"].includes(state) && !countdownInterval) {
+            state = "countdown";
+            countdownValue = 3;
+            countdownEl.style.display = "block";
+            countdownEl.textContent = countdownValue;
+            countdownInterval = setInterval(() => {
+              if (--countdownValue > 0) {
+                countdownEl.textContent = countdownValue;
+              } else {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                countdownEl.style.display = "none";
+                startQuiz();
+              }
+            }, 1000);
+          }
+
+          if (state === "inQuestion" && !answerLocked) {
+            const [left, right, top] = [234, 454, 10].map(i => face.faceLandmarks[0][i]);
+            const centerX = canvas.width * (1 - ((left.x + right.x) / 2));
+            const topY = canvas.height * top.y;
+            const size = canvas.width * 0.28;
+            const bubbles = [
+              { x: centerX - size - 20, y: topY - canvas.height * 0.18, label: question.options[0] },
+              { x: centerX + 20, y: topY - canvas.height * 0.18, label: question.options[1] }
+            ];
+
+            ctx.font = `${size * 0.15}px sans-serif`;
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            for (let b of bubbles) {
+              ctx.drawImage(bubbleVideo, b.x, b.y, size, size);
+              ctx.fillStyle = "white";
+              ctx.fillText(b.label, b.x + size / 2, b.y + size / 2);
+            }
+
+            if (gesture === "Open_Palm" && gest.landmarks[0]) {
+              const p = gest.landmarks[0][8], x = (1 - p.x) * canvas.width, y = p.y * canvas.height;
+              for (let b of bubbles) {
+                if (x > b.x && x < b.x + size && y > b.y && y < b.y + size) {
+                  answerLocked = true;
+                  const isCorrect = b.label === question.correct;
+                  if (isCorrect) correctCount++;
+                  showResultImage = isCorrect ? correctImage : wrongImage;
+                  resultImageAlpha = 1;
+                  resultImageTimer = 90;
+                  // displayLabel removed
+                  setTimeout(() => {
+                    showResultImage = null;
+                    resultImageTimer = 0;
+                    resultImageAlpha = 1;
+                    state = "showingProduct";
+                    productAlpha = 0;
+                    productFadeState = "in";
+                  }, 1500);
+                }
+              }
+            }
+          }
+        } else if (Date.now() - faceLastDetected > 12000 && state !== "countdown") {
+          state = "idle";
+          // Show intro labels
+          mainLabels.style.display = "flex";
+          bottomLabel.style.display = "block";
+        }
+      } catch (e) {
+        // Optionally show detection error elsewhere
+        console.warn(e);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    await loadQuestions();
+    await initCamera();
+    render();
+    resetScreensaverTimer(); // Start timer on load
+    fitCatalogueBtnText();
+  </script>
+</body>
+</html>
